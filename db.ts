@@ -3,15 +3,21 @@ import dotenv from "dotenv";
 
 dotenv.config({ path: ".env" });
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "",
-  database: process.env.DB_DATABASE || "school_db",
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+// Aiven MySQL usually requires SSL and provides a connection URI
+const dbConfig = process.env.DATABASE_URL 
+  ? process.env.DATABASE_URL 
+  : {
+      host: process.env.DB_HOST || "localhost",
+      port: parseInt(process.env.DB_PORT || "3306"),
+      user: process.env.DB_USER || "root",
+      password: process.env.DB_PASSWORD || "",
+      database: process.env.DB_DATABASE || "school_db",
+      ssl: process.env.DB_SSL === "true" ? {
+        rejectUnauthorized: false // Often needed for Aiven if not providing CA cert
+      } : undefined
+    };
+
+const pool = mysql.createPool(dbConfig);
 
 export async function initializeDatabase() {
   try {
