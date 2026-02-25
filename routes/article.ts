@@ -16,14 +16,16 @@ router.get("/latest", async (req: Request, res: Response) => {
   }
 });
 
-router.get("/all", async (req: Request, res: Response) => {
+// GET /api/articles - Get all articles
+router.get("/", async (req: Request, res: Response) => {
   try {
     const [rows] = await pool.query(
       "SELECT id, title, content, image_url, category, author, created_at FROM articles ORDER BY created_at DESC"
     );
+
     res.json(rows);
   } catch (error) {
-    console.error("Error fetching latest articles:", error);
+    console.error("Error fetching all articles:", error);
     res.status(500).json({ message: "Failed to fetch articles" });
   }
 });
