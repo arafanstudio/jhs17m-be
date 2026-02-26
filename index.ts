@@ -31,8 +31,17 @@ async function startServer() {
     }
   };
 
+  // Middleware to protect article mutations (POST, PUT, DELETE)
+  const protectArticleMutations = (req: Request, res: Response, next: NextFunction) => {
+    if (req.method === "POST" || req.method === "PUT" || req.method === "DELETE") {
+      adminAuth(req, res, next);
+    } else {
+      next();
+    }
+  };
+
   // API Routes
-  app.use("/api/articles", articleRouter);
+  app.use("/api/articles", protectArticleMutations, articleRouter);
 
   // Admin Login Route (POST)
   app.post("/api/admin/login", adminAuth, (req, res) => {

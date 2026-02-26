@@ -82,4 +82,63 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
+// PUT /api/articles/:id - Update an article (Admin protected)
+router.put("/:id", async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { title, content, image_url, category, author } = req.body;
+
+  if (!title || !content || !author) {
+    return res.status(400).json({ message: "Title, content, and author are required" });
+  }
+
+  // Validate category
+  const validCategories = ["student", "teacher"];
+  const categoryValue = category && validCategories.includes(category) ? category : "student";
+
+  try {
+    const [result] = await pool.query(
+      "UPDATE articles SET title = ?, content = ?, image_url = ?, category = ?, author = ? WHERE id = ?",
+      [title, content, image_url || null, categoryValue, author, id]
+    );
+
+    if ((result as any).affectedRows === 0) {
+      return res.status(404).json({ message: "Article not found" });
+    }
+
+    res.json({
+      id,
+      title,
+      content,
+      image_url,
+      category: categoryValue,
+      author,
+      message: "Article updated successfully",
+    });
+  } catch (error) {
+    console.error(`Error updating article with ID ${id}:`, error);
+    res.status(500).json({ message: "Failed to update article" });
+  }
+});
+
+// DELETE /api/articles/:id - Delete an article (Admin protected)
+router.delete("/:id", async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const [result] = await pool.query(
+      "DELETE FROM articles WHERE id = ?",
+      [id]
+    );
+
+    if ((result as any).affectedRows === 0) {
+      return res.status(404).json({ message: "Article not found" });
+    }
+
+    res.json({ message: "Article deleted successfully" });
+  } catch (error) {
+    console.error(`Error deleting article with ID ${id}:`, error);
+    res.status(500).json({ message: "Failed to delete article" });
+  }
+});
+
 export default router;
